@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quiz – Gestión Gerencial en Salud</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --text: #1a1a1a;
+    --text-sec: #555;
+    --text-hint: #888;
+    --teal-bg: #E1F5EE;
+    --teal: #1D9E75;
+    --teal-dark: #085041;
+    --teal-mid: #5DCAA5;
+    --red-bg: #FCEBEB;
+    --red: #E24B4A;
+    --red-dark: #501313;
+    --red-mid: #F09595;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+  header { text-align: center; margin-bottom: 2rem; max-width: 560px; }
+  header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  header p { font-size: 14px; color: var(--text-sec); }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; max-width: 560px; width: 100%; }
+  .score-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .score-badge { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 5px 14px; font-size: 13px; color: var(--text-sec); }
+  .score-badge span { font-weight: 600; color: var(--text); font-size: 15px; }
+  .progress-bar { height: 6px; background: var(--bg); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; border: 0.5px solid var(--border); }
+  .progress-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.4s ease; }
+  .cat-pill { display: inline-block; background: var(--teal-bg); color: var(--teal-dark); font-size: 12px; padding: 3px 12px; border-radius: 99px; margin-bottom: 0.75rem; font-weight: 500; }
+  .q-num { font-size: 12px; color: var(--text-hint); margin-bottom: 8px; }
+  .q-text { font-size: 16px; font-weight: 500; line-height: 1.55; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
+  .opt-btn { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 12px 14px; font-size: 14px; color: var(--text); text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
+  .opt-btn:hover:not(:disabled) { background: var(--bg); border-color: #aaa; }
+  .opt-btn.correct { background: var(--teal-bg); border-color: var(--teal); color: var(--teal-dark); }
+  .opt-btn.wrong { background: var(--red-bg); border-color: var(--red); color: var(--red-dark); }
+  .opt-btn:disabled { cursor: default; }
+  .opt-letter { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+  .correct .opt-letter { background: var(--teal); color: #fff; }
+  .wrong .opt-letter { background: var(--red); color: #fff; }
+  .feedback { border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px; margin-bottom: 1rem; display: none; line-height: 1.55; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: var(--teal-bg); color: var(--teal-dark); border: 0.5px solid var(--teal-mid); }
+  .feedback.fail { background: var(--red-bg); color: var(--red-dark); border: 0.5px solid var(--red-mid); }
+  .next-btn { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 10px 24px; font-size: 14px; cursor: pointer; display: none; align-items: center; gap: 6px; font-family: inherit; color: var(--text); transition: background 0.15s; }
+  .next-btn.show { display: inline-flex; }
+  .next-btn:hover { background: var(--bg); }
+  .results { text-align: center; padding: 1.5rem 0; display: none; }
+  .results.show { display: block; }
+  .result-score { font-size: 52px; font-weight: 700; color: var(--text); }
+  .result-label { font-size: 16px; font-weight: 500; margin-bottom: 1rem; }
+  .result-msg { background: var(--bg); border-radius: var(--radius-lg); padding: 1rem 1.25rem; font-size: 14px; color: var(--text-sec); margin-bottom: 1.5rem; line-height: 1.65; }
+  .restart-btn { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 10px 28px; font-size: 14px; cursor: pointer; font-family: inherit; color: var(--text); transition: background 0.15s; }
+  .restart-btn:hover { background: var(--bg); }
+  footer { margin-top: 2rem; font-size: 12px; color: var(--text-hint); text-align: center; }
+  @media(max-width: 480px) { .card { padding: 1.25rem 1rem; } header h1 { font-size: 19px; } .q-text { font-size: 15px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Gestión Gerencial en Salud</h1>
+  <p>Maestría en Gestión en Salud · Gerencia Moderna</p>
+</header>
+
+<div class="card">
+  <div class="score-bar">
+    <div style="font-size:13px;color:var(--text-sec)">Quiz interactivo</div>
+    <div class="score-badge">Puntos: <span id="score">0</span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+  <div id="question-area">
+    <div class="cat-pill" id="cat-pill"></div>
+    <div class="q-num" id="q-num"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">Siguiente <i class="ti ti-arrow-right"></i></button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="result-score" id="r-score"></div>
+    <div class="result-label" id="r-label"></div>
+    <div class="result-msg" id="r-msg"></div>
+    <button class="restart-btn" onclick="restart()"><i class="ti ti-refresh" style="font-size:15px;vertical-align:-2px;margin-right:6px"></i>Jugar de nuevo</button>
+  </div>
+</div>
+
+<footer>Desarrollado para estudiantes de posgrado · Gestión Gerencial en Salud</footer>
+
+<script>
+const questions = [
+  {
+    cat: "Planificación Estratégica",
+    q: "¿Cuál es el primer paso en el ciclo de gestión gerencial moderna?",
+    opts: ["Controlar resultados", "Planificar con base en el diagnóstico situacional", "Ejecutar acciones inmediatas", "Evaluar al personal"],
+    ans: 1,
+    fb: "La planificación estratégica basada en diagnóstico es el punto de partida. Sin ella, las decisiones gerenciales carecen de fundamento y dirección."
+  },
+  {
+    cat: "Toma de Decisiones",
+    q: "En gerencia moderna de salud, la toma de decisiones debe estar basada principalmente en:",
+    opts: ["La experiencia intuitiva del gerente", "Evidencia, datos e indicadores de salud", "La opinión del equipo médico senior", "Las tendencias internacionales sin adaptación"],
+    ans: 1,
+    fb: "La gerencia basada en evidencia es un pilar fundamental. Los indicadores de salud permiten decisiones objetivas, medibles y justificables."
+  },
+  {
+    cat: "Liderazgo Organizacional",
+    q: "El liderazgo transformacional en organizaciones de salud se caracteriza por:",
+    opts: ["Centralizar todas las decisiones en el gerente", "Inspirar, motivar y desarrollar capacidades del equipo", "Cumplir estrictamente las normas sin adaptación", "Minimizar el cambio organizacional"],
+    ans: 1,
+    fb: "El líder transformacional genera visión compartida, empodera a su equipo y promueve la innovación, generando cambios positivos y sostenibles."
+  },
+  {
+    cat: "Gestión de Recursos",
+    q: "La eficiencia en la gestión de recursos en salud implica:",
+    opts: ["Maximizar el gasto presupuestario disponible", "Lograr los mejores resultados al menor costo posible", "Reducir servicios para disminuir costos", "Ignorar los costos si la calidad es buena"],
+    ans: 1,
+    fb: "Eficiencia = resultados óptimos con recursos razonables. En salud esto es crítico: los recursos son limitados y la demanda siempre supera la oferta."
+  },
+  {
+    cat: "Control y Evaluación",
+    q: "¿Qué indicador representa mejor el desempeño gerencial en una institución de salud?",
+    opts: ["Número de personal contratado", "Tasa de resolución de problemas y satisfacción del usuario", "Volumen de trámites administrativos procesados", "Antigüedad promedio del equipo directivo"],
+    ans: 1,
+    fb: "Los indicadores de resultado e impacto (satisfacción, resolución de problemas) reflejan el verdadero desempeño gerencial más allá de los procesos internos."
+  },
+  {
+    cat: "Gestión del Cambio",
+    q: "Ante una resistencia organizacional al cambio, un buen gerente debe:",
+    opts: ["Imponer el cambio por autoridad jerárquica", "Involucrar al equipo y comunicar claramente los beneficios", "Postponer el cambio indefinidamente", "Reemplazar al personal resistente"],
+    ans: 1,
+    fb: "La gestión participativa del cambio reduce resistencias. Comunicar el 'por qué' y el 'para qué' convierte a los actores en agentes del cambio."
+  },
+  {
+    cat: "Comunicación Gerencial",
+    q: "La comunicación organizacional efectiva en gerencia de salud debe ser:",
+    opts: ["Unidireccional: del gerente al equipo", "Bidireccional, clara, oportuna y con retroalimentación", "Exclusivamente formal y escrita", "Solo entre niveles directivos"],
+    ans: 1,
+    fb: "La comunicación efectiva es bidireccional y continua. Genera confianza, reduce errores y fortalece la cultura organizacional."
+  },
+  {
+    cat: "Calidad en Salud",
+    q: "El ciclo PDCA (Planificar-Hacer-Verificar-Actuar) en salud se aplica para:",
+    opts: ["Aumentar el número de pacientes atendidos", "Mejorar continuamente los procesos y la calidad de la atención", "Reducir el personal de salud necesario", "Estandarizar sueldos del equipo"],
+    ans: 1,
+    fb: "El ciclo PDCA es la base de la mejora continua. Su aplicación permite identificar brechas, implementar mejoras y consolidar buenas prácticas."
+  }
+];
+
+const letters = ['A','B','C','D'];
+let current = 0, score = 0, answered = false;
+
+function render() {
+  const q = questions[current];
+  document.getElementById('cat-pill').textContent = q.cat;
+  document.getElementById('q-num').textContent = `Pregunta ${current + 1} de ${questions.length}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('progress').style.width = `${(current / questions.length) * 100}%`;
+
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${o}`;
+    btn.onclick = () => pick(i, btn);
+    opts.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  document.getElementById('next-btn').className = 'next-btn';
+  answered = false;
+}
+
+function pick(i, btn) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('feedback');
+  if (i === q.ans) {
+    btn.classList.add('correct');
+    score += 10;
+    document.getElementById('score').textContent = score;
+    fb.className = 'feedback ok show';
+    fb.innerHTML = `<i class="ti ti-circle-check" style="font-size:16px;vertical-align:-2px;margin-right:6px"></i><strong>¡Correcto!</strong> ${q.fb}`;
+  } else {
+    btn.classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+    fb.className = 'feedback fail show';
+    fb.innerHTML = `<i class="ti ti-circle-x" style="font-size:16px;vertical-align:-2px;margin-right:6px"></i><strong>Incorrecto.</strong> ${q.fb}`;
+  }
+  document.getElementById('next-btn').className = 'next-btn show';
+}
+
+function nextQ() {
+  current++;
+  if (current >= questions.length) showResults();
+  else render();
+}
+
+function showResults() {
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('question-area').style.display = 'none';
+  const pct = Math.round((score / (questions.length * 10)) * 100);
+  let label, msg;
+  if (pct >= 90) { label = "¡Excelente desempeño gerencial!"; msg = "Dominas los fundamentos de la gestión gerencial moderna. Estás listo para liderar organizaciones de salud con visión estratégica y orientación a resultados."; }
+  else if (pct >= 70) { label = "¡Buen nivel gerencial!"; msg = "Tienes bases sólidas en gestión. Refuerza los temas donde tuviste dificultad y complementa con lectura de casos reales de gestión en salud."; }
+  else if (pct >= 50) { label = "Nivel en desarrollo"; msg = "Vas por buen camino. Revisa los conceptos de planificación estratégica, toma de decisiones basada en evidencia y gestión del cambio."; }
+  else { label = "Oportunidad de mejora"; msg = "No te preocupes, esto es parte del aprendizaje. Repasa los fundamentos de la gerencia moderna y vuelve a intentarlo."; }
+
+  document.getElementById('r-score').textContent = `${pct}%`;
+  document.getElementById('r-label').textContent = label;
+  document.getElementById('r-msg').textContent = msg;
+  document.getElementById('results').className = 'results show';
+}
+
+function restart() {
+  current = 0; score = 0;
+  document.getElementById('score').textContent = '0';
+  document.getElementById('question-area').style.display = 'block';
+  document.getElementById('results').className = 'results';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
